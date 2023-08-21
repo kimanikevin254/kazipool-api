@@ -80,11 +80,14 @@ const update_job = async (req, res) => {
         }
 
         // check if category exists
-        const categoryExists = await Category.findOne({ title: category })
+        let categoryExists = await Category.findOne({ title: category })
 
         if(!categoryExists){
-            return res.status(400).json({
-                message: 'Category does not exist'
+            // return res.status(400).json({
+            //     message: 'Category does not exist'
+            // })
+            categoryExists = await Category.create({
+                title: Category
             })
         }
 

@@ -10,7 +10,7 @@ const jobSchema = mongoose.Schema({
         required: true
     },
     compensation: {
-        type: String,
+        type: Number,
         required: true
     },
     category: {
