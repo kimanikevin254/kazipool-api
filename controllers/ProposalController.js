@@ -1,6 +1,7 @@
 const Job = require('../models/Job')
 const Proposal = require('../models/Proposal')
-const { proposal_fields } = require('../utils/required_fields')
+const User = require('../models/User')
+const { proposal_fields, assign_job_fields } = require('../utils/required_fields')
 
 const create_job_proposal = async (req, res) => {
     try {
@@ -110,8 +111,90 @@ const get_a_proposal = async (req, res) => {
     }
 }
 
+const accept_proposal = async (req, res) => {
+    try {
+        const { jobId, userId, proposalId } = req.body
+
+        // check if all fields are passed
+        const missingFields = assign_job_fields.filter(field => !Object.keys(req.body).includes(field))
+
+        if(missingFields.length > 0){
+            return res.status(400).json({
+                "error": true,
+                "Missing fields": missingFields
+            })
+        }
+
+        // check if proposal exists
+        let proposalExists = await Proposal.findById(proposalId)
+
+        if(!proposalExists){
+            return res.status(400).json({
+                message: 'Proposal does not exist'
+            })
+        }
+
+        // check if user exists
+        let userExists = await User.findById(userId)
+
+        if(!userExists){
+            return res.status(400).json({
+                message: 'User does not exist'
+            })
+        }
+
+        // check if job exists
+        let jobExists = await Job.findById(jobId)
+
+        if(!jobExists){
+            return res.status(400).json({
+                message: 'Job does not exist'
+            })
+        }
+
+        // make sure proposal belongs to the specied job
+        if(JSON.stringify(proposalExists.job._id) !== JSON.stringify(jobExists._id)){
+            return res.status(400).json({
+                message: 'Proposal does not belong to the specified job'
+            })
+        }
+
+        // make sure user is not self assigning the job
+        if(JSON.stringify(userExists._id) === JSON.stringify(req.user._id)){
+            return res.status(400).json({
+                message: 'You cannot assign yourself your own job'
+            })
+        }
+
+        // make sure the user is not assigning a job they do not own
+        if(JSON.stringify(jobExists.owner._id) !== JSON.stringify(req.user._id)){
+            return res.status(400).json({
+                message: 'You cannot assign a job you do not own'
+            })
+        }
+
+        // accept proposal
+        proposalExists.accepted = true
+        await proposalExists.save()
+
+        // assign the job to the specified user
+        jobExists.assigned_to = userExists
+        await jobExists.save()
+
+        res.status(200).json({
+            message: `Job successfuly assigned to ${userExists.name}`
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(400).json({
+            message: 'Could not assign the job. Please try again later.'
+        })
+    }
+}
+
 module.exports = {
     create_job_proposal,
     get_job_proposals,
-    get_a_proposal
+    get_a_proposal,
+    accept_proposal
 }

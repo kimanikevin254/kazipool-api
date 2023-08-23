@@ -170,66 +170,7 @@ const get_a_job = async (req, res) => {
     }
 }
 
-const assign_job = async (req, res) => {
-    try {
-        const { jobId, userId } = req.body
 
-        // check if all fields are passed
-        const missingFields = assign_job_fields.filter(field => !Object.keys(req.body).includes(field))
-
-        if(missingFields.length > 0){
-            return res.status(400).json({
-                "error": true,
-                "Missing fields": missingFields
-            })
-        }
-
-        // check if user exists
-        let userExists = await User.findById(userId)
-
-        if(!userExists){
-            return res.status(400).json({
-                message: 'User does not exist'
-            })
-        }
-
-        // check if job exists
-        let jobExists = await Job.findById(jobId)
-
-        if(!jobExists){
-            return res.status(400).json({
-                message: 'Job does not exist'
-            })
-        }
-
-        // make sure user is not self assigning the job
-        if(JSON.stringify(userExists._id) === JSON.stringify(req.user._id)){
-            return res.status(400).json({
-                message: 'You cannot assign yourself your own job'
-            })
-        }
-
-        // make sure the user is not assigning a job they do not own
-        if(JSON.stringify(jobExists.owner._id) !== JSON.stringify(req.user._id)){
-            return res.status(400).json({
-                message: 'You cannot assign a job you do not own'
-            })
-        }
-
-        // assign the job to the specified user
-        jobExists.assigned_to = userExists
-        await jobExists.save()
-
-        res.status(200).json({
-            message: `Job successfuly assigned to ${userExists.name}`
-        })
-    } catch (error) {
-        console.log(error)
-        res.status(400).json({
-            message: 'Could not assign the job. Please try again later.'
-        })
-    }
-}
 
 module.exports = {
     create_job,
@@ -237,5 +178,4 @@ module.exports = {
     get_all_jobs,
     get_my_jobs,
     get_a_job,
-    assign_job,
 }
