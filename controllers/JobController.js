@@ -133,6 +133,7 @@ const get_my_jobs = async (req, res) => {
                 select: '_id name username email'
             }
         })
+        .populate('assigned_to', ['_id', 'name', 'username'])
     res.status(200).json({
         jobs
     })
@@ -170,6 +171,20 @@ const get_a_job = async (req, res) => {
     }
 }
 
+const get_jobs_assigned_to_me = async (req, res) => {
+    try {
+        const jobs = await Job.find({ assigned_to: req.user })
+
+        res.status(200).json(jobs)
+    } catch (error) {
+        console.log(error)
+
+        res.status(400).json({
+            message: 'Unable to fetch the jobs' 
+        })
+    }
+} 
+
 
 
 module.exports = {
@@ -178,4 +193,5 @@ module.exports = {
     get_all_jobs,
     get_my_jobs,
     get_a_job,
+    get_jobs_assigned_to_me
 }
