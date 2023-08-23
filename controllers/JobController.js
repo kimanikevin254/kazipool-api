@@ -88,7 +88,7 @@ const update_job = async (req, res) => {
             //     message: 'Category does not exist'
             // })
             categoryExists = await Category.create({
-                title: Category
+                title: category
             })
         }
 

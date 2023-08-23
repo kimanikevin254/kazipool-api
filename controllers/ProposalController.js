@@ -64,9 +64,13 @@ const get_job_proposals = async (req, res) => {
         }
 
         // fetch the job proposals
-        const proposals = await Proposal.find({ job: jobExists }).populate('owner', ['_id', 'name', 'username', 'email'])
+        const proposals = await Proposal.find({ job: jobExists._id }).populate('owner', ['_id', 'name', 'username', 'email']).populate('job')
 
         res.status(200).json({
+            job: {
+                _id: jobExists._id,
+                title: jobExists.title,
+            },
             proposals
         })
     } catch (error) {
@@ -77,7 +81,37 @@ const get_job_proposals = async (req, res) => {
     }
 }
 
+const get_a_proposal = async (req, res) => {
+    try {
+        const { id } = req.params
+
+        if(!id){
+            return res.status(400).json({
+                message: 'id is required'
+            })
+        }
+
+        // retrieve proposal
+        const proposalDoc = await Proposal.findById(id).populate('owner', ['_id', 'name', 'username', 'email']).populate('job', ['title'])
+
+        if(!proposalDoc){
+            return res.status(400).json({
+                message: 'Proposal does not exist'
+            })
+        }
+
+        res.status(200).json({
+            proposal: proposalDoc
+        })
+    } catch (error) {
+        res.status(400).json({
+            message: 'Unable to fetch the proposal'
+        })
+    }
+}
+
 module.exports = {
     create_job_proposal,
-    get_job_proposals
+    get_job_proposals,
+    get_a_proposal
 }
