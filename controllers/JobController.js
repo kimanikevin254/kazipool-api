@@ -109,7 +109,15 @@ const update_job = async (req, res) => {
 }
 
 const get_all_jobs = async (req, res) => {
-    const jobs = await Job.find({}).sort({ createdAt: 'desc' })
+    const jobs = await Job.find({})
+        .sort({ createdAt: 'desc' })
+        .populate({
+            path: 'proposals',
+            populate: {
+                path: 'owner',
+                select: '_id name username email'
+            }
+        })
     res.status(200).json({
         jobs
     })
@@ -117,7 +125,14 @@ const get_all_jobs = async (req, res) => {
 
 const get_my_jobs = async (req, res) => {
     const jobs = await Job.find({ owner: req.user })
-    console.log(jobs)
+        .sort({ createdAt: 'desc' })
+        .populate({
+            path: 'proposals',
+            populate: {
+                path: 'owner',
+                select: '_id name username email'
+            }
+        })
     res.status(200).json({
         jobs
     })
@@ -128,7 +143,15 @@ const get_a_job = async (req, res) => {
         const { id } = req.params
 
         // check if the job exists
-        const jobExists = await Job.findById(id).populate('category')
+        const jobExists = await Job.findById(id)
+            .populate('category')
+            .populate({
+                path: 'proposals',
+                populate: {
+                    path: 'owner',
+                    select: '_id name username email'
+                }
+            })
 
         if(!jobExists){
             return res.status(400).json({
@@ -147,55 +170,10 @@ const get_a_job = async (req, res) => {
     }
 }
 
-const create_job_proposal = async (req, res) => {
-    try {
-        const { jobId, bid_amount, project_duration, cover_letter } = req.body
-
-        // check if all fields are passed
-        const missingFields = proposal_fields.filter(field => !Object.keys(req.body).includes(field))
-
-        if(missingFields.length > 0){
-            return res.status(400).json({
-                "error": true,
-                "Missing fields": missingFields
-            })
-        }
-
-        // check if job exists
-        const jobExists = await Job.findById(jobId)
-
-        if(!jobExists){
-            return res.status(400).json({
-                message: 'Job does not exist'
-            })
-        }
-
-        // create proposal
-        const proposalDoc = await Proposal.create({
-            bid_amount: bid_amount,
-            project_duration: project_duration,
-            cover_letter: cover_letter,
-            job: jobExists,
-            owner: req.user
-        })
-
-        res.status(201).json({
-            "proposal": proposalDoc
-        })
-
-    } catch (error) {
-        console.log(error)
-        res.status(400).json({
-            message: 'Unable to save the proposal.'
-        })
-    }
-}
-
 module.exports = {
     create_job,
     update_job,
     get_all_jobs,
     get_my_jobs,
     get_a_job,
-    create_job_proposal
 }

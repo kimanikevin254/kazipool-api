@@ -34,7 +34,11 @@ const jobSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
-    }
+    },
+    proposals: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Proposal',
+    }]
 }, {
     timestamps: true
 })

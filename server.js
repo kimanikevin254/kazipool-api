@@ -6,6 +6,7 @@ const morgan = require("morgan");
 
 const auth = require('./routes/auth')
 const job = require('./routes/job')
+const proposal = require('./routes/proposal')
 
 // import routes
 const { connectDB } = require('./utils/db')
@@ -22,6 +23,7 @@ app.use(morgan("dev"));
 
 app.use('/auth', auth)
 app.use('/jobs', job)
+app.use('/proposals', proposal)
 
 connectDB()
     .then(res => app.listen(process.env.PORT, () => {
